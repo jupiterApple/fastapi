@@ -9,3 +9,9 @@ pymysql
 python-multipart
 pydantic[email]
 loguru
+
+# dev/test
+pytest
+pytest-cov
+ruff
+httpx

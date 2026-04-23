@@ -6,7 +6,6 @@ from app.core.config import settings
 from app.core.security import oauth2_scheme
 from app.db.session import SessionLocal
 from app.models.user import User
-from app.schemas.auth import TokenData
 
 def get_db() -> Generator[Session, None, None]:
     db = SessionLocal()

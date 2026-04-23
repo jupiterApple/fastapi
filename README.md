@@ -167,3 +167,10 @@ backend/
 └── API_Collection.postman_collection.json
 ```
 
+---
+
+## Estudos Implementados
+
+Cada conceito foi desenvolvido em branch dedicada, com código e documentação no mesmo PR.
+Índice completo com status, links para PRs e docs: [docs/pdi/README.md](docs/pdi/README.md).
+
