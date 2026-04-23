@@ -1,0 +1,182 @@
+{
+  "info": {
+    "_postman_id": "APP_FC_26_API",
+    "name": "APP FC 26 - FastAPI Backend",
+    "description": "Coleção de endpoints da API backend FastAPI + JWT.\n\n🔐 **Autenticação**: JWT Bearer Token (duração: 30 min)\n📍 **Base URL**: {{base_url}}/api/v1\n\n**Quick Start**:\n1. Fazer login (POST /auth/login) — o token é salvo automaticamente na variável `auth_token`\n2. Chamar qualquer endpoint protegido — o token é injetado via `Authorization: Bearer <token>`",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Autenticação",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  var jsonData = pm.response.json();",
+                  "  pm.environment.set('auth_token', jsonData.access_token);",
+                  "  pm.environment.set('token_type', jsonData.token_type);",
+                  "  console.log('Token armazenado com sucesso');",
+                  "} else {",
+                  "  console.log('Erro ao fazer login');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@local.dev\",\n  \"password\": \"admin123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "login"]
+            },
+            "description": "Autentica um usuário e retorna um JWT.\n\n**Status Codes:**\n- `200` - Login bem-sucedido\n- `400` - Credenciais inválidas\n- `500` - Erro interno"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Usuários (CRUD)",
+      "item": [
+        {
+          "name": "Get Current User (me)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{auth_token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/me",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "users", "me"]
+            },
+            "description": "Retorna dados do usuário autenticado (extraído do JWT).\n\n🔒 **Requer Autenticação**: Sim\n\n**Status Codes:**\n- `200` - Sucesso\n- `401` - Token inválido/expirado"
+          },
+          "response": []
+        },
+        {
+          "name": "List Users",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{auth_token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/?skip=0&limit=100",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "users", ""],
+              "query": [
+                { "key": "skip", "value": "0" },
+                { "key": "limit", "value": "100" }
+              ]
+            },
+            "description": "Lista usuários paginados.\n\n🔒 **Requer Autenticação**: Sim\n\n**Query:**\n- `skip` (int, default 0)\n- `limit` (int, default 100)\n\n**Status Codes:**\n- `200` - Sucesso (array, pode estar vazio)\n- `401` - Token inválido/expirado"
+          },
+          "response": []
+        },
+        {
+          "name": "Get User by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{auth_token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "users", "1"]
+            },
+            "description": "Retorna um usuário pelo ID.\n\n🔒 **Requer Autenticação**: Sim\n\n**Status Codes:**\n- `200` - Sucesso\n- `401` - Token inválido/expirado\n- `404` - Usuário não encontrado"
+          },
+          "response": []
+        },
+        {
+          "name": "Create User",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{auth_token}}", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"newuser@example.com\",\n  \"full_name\": \"New User\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "users", ""]
+            },
+            "description": "Cria um novo usuário.\n\n🔒 **Requer Autenticação**: Sim\n\n**Body:**\n- `email` (string, required) - Email único\n- `full_name` (string, optional)\n- `password` (string, required)\n\n**Status Codes:**\n- `201` - Usuário criado\n- `400` - Email já registrado\n- `401` - Token inválido/expirado"
+          },
+          "response": []
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{auth_token}}", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"Nome Atualizado\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "users", "1"]
+            },
+            "description": "Atualiza parcialmente um usuário (todos os campos do body são opcionais).\n\n🔒 **Requer Autenticação**: Sim\n\n**Body (todos opcionais):**\n- `email` (string)\n- `full_name` (string)\n- `password` (string)\n\n**Status Codes:**\n- `200` - Atualizado\n- `400` - Email já registrado\n- `401` - Token inválido/expirado\n- `404` - Usuário não encontrado"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{auth_token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/2",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "users", "2"]
+            },
+            "description": "Deleta um usuário pelo ID.\n\n🔒 **Requer Autenticação**: Sim\n\n**Status Codes:**\n- `204` - Deletado (sem body)\n- `401` - Token inválido/expirado\n- `404` - Usuário não encontrado"
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      { "key": "token", "value": "{{auth_token}}", "type": "string" }
+    ]
+  },
+  "event": [
+    { "listen": "prerequest", "script": { "type": "text/javascript", "exec": [""] } },
+    { "listen": "test", "script": { "type": "text/javascript", "exec": [""] } }
+  ],
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8000", "type": "string" },
+    { "key": "auth_token", "value": "", "type": "string" },
+    { "key": "token_type", "value": "bearer", "type": "string" }
+  ]
+}

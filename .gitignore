@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+env/
+ENV/
+
+# IDE / editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Claude local (skills/memory do projeto)
+.claude/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
