@@ -15,8 +15,8 @@ ENV/
 *.swp
 *.swo
 
-# Claude local (skills/memory do projeto)
-.claude/
+# Claude local (apenas settings locais, skills são versionadas)
+.claude/settings.local.json
 
 # OS
 .DS_Store

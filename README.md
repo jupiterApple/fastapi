@@ -167,18 +167,3 @@ backend/
 └── API_Collection.postman_collection.json
 ```
 
----
-
-## Regras rígidas (resumo)
-
-Ver [CLAUDE.md](../CLAUDE.md) para regras completas. Curto:
-
-1. **Nunca** `print()` — sempre `logger`.
-2. Todo endpoint tem `responses` e `response_model`.
-3. Sessão sempre via `Depends(get_db)`.
-4. Router não executa query complexa — delega a service/repo.
-5. Nunca retorne ORM direto — serialize via schema `Read`.
-6. Nunca logue senhas, hashes ou tokens.
-7. Segredos só via `.env` — nada hardcoded.
-8. Código e commits em português.
-
