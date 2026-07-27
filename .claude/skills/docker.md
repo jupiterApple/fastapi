@@ -13,7 +13,7 @@ Definidos em [docker-compose.yml](../../docker-compose.yml):
 |----------|--------------------|------------|------------------------------------------|
 | backend  | build local        | 8000       | API FastAPI                              |
 | db       | `mysql:8`          | 3307       | MySQL (user/pass `app`/`app`, db `app`)  |
-| adminer  | `adminer`          | 8080       | UI web para inspecionar o MySQL          |
+| adminer  | `adminer`          | 8081       | UI web para inspecionar o MySQL          |
 
 ## Comandos do dia-a-dia
 

@@ -28,7 +28,6 @@ Backend mínimo de estudo: autenticação JWT e CRUD completo de usuários.
 ## Quick Start
 
 ```bash
-cd backend
 docker compose up -d --build
 ```
 
@@ -37,7 +36,7 @@ docker compose up -d --build
 | API         | http://localhost:8000                            |
 | Swagger UI  | http://localhost:8000/docs                       |
 | ReDoc       | http://localhost:8000/redoc                      |
-| Adminer     | http://localhost:8080                            |
+| Adminer     | http://localhost:8081                            |
 | MySQL       | `localhost:3307` (user/pass `app`/`app`, db `app`) |
 
 **Credenciais iniciais** (via seed): `admin@local.dev` / `admin123` — definidas em [.env](.env).
@@ -138,33 +137,33 @@ Collection Postman pronta: [API_Collection.postman_collection.json](API_Collecti
 ## Estrutura
 
 ```
-backend/
-├── app/
-│   ├── api/
-│   │   ├── deps.py              # get_db, get_current_user
-│   │   └── v1/
-│   │       ├── auth.py          # POST /auth/login
-│   │       └── users.py         # CRUD /users
-│   ├── core/
-│   │   ├── config.py            # Settings (pydantic-settings)
-│   │   ├── logging.py           # Loguru
-│   │   └── security.py          # JWT + hashing
-│   ├── db/
-│   │   ├── base.py              # registra modelos pro create_all
-│   │   ├── base_class.py        # DeclarativeBase
-│   │   ├── seed.py              # superusuário inicial
-│   │   └── session.py           # engine + SessionLocal
-│   ├── models/
-│   │   └── user.py
-│   ├── schemas/
-│   │   ├── auth.py              # LoginInput, Token
-│   │   └── user.py              # UserCreate/Read/Update
-│   └── main.py
-├── .env
-├── docker-compose.yml
-├── Dockerfile
-├── requirements.txt
-└── API_Collection.postman_collection.json
+app/
+├── api/
+│   ├── deps.py              # get_db, get_current_user
+│   └── v1/
+│       ├── auth.py          # POST /auth/login
+│       └── users.py         # CRUD /users
+├── core/
+│   ├── config.py            # Settings (pydantic-settings)
+│   ├── logging.py           # Loguru
+│   └── security.py          # JWT + hashing
+├── db/
+│   ├── base.py              # registra modelos pro create_all
+│   ├── base_class.py        # DeclarativeBase
+│   ├── seed.py              # superusuário inicial
+│   └── session.py           # engine + SessionLocal
+├── models/
+│   └── user.py
+├── schemas/
+│   ├── auth.py              # LoginInput, Token
+│   └── user.py              # UserCreate/Read/Update
+└── main.py
+
+.env
+docker-compose.yml
+Dockerfile
+requirements.txt
+API_Collection.postman_collection.json
 ```
 
 ---
