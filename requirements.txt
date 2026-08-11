@@ -9,9 +9,11 @@ pymysql
 python-multipart
 pydantic[email]
 loguru
+redis
 
 # dev/test
 pytest
 pytest-cov
 ruff
 httpx
+fakeredis

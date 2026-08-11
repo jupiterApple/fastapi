@@ -1,11 +1,16 @@
 from collections.abc import Generator
+
 from fastapi import Depends, HTTPException, status
 from jose import JWTError, jwt
+from redis import Redis
 from sqlalchemy.orm import Session
+
+from app.core.cache import redis_client
 from app.core.config import settings
 from app.core.security import oauth2_scheme
 from app.db.session import SessionLocal
 from app.models.user import User
+
 
 def get_db() -> Generator[Session, None, None]:
     db = SessionLocal()
@@ -13,6 +18,9 @@ def get_db() -> Generator[Session, None, None]:
         yield db
     finally:
         db.close()
+
+def get_cache() -> Redis:
+    return redis_client
 
 def get_user_by_id(db: Session, user_id: int) -> User | None:
     return db.query(User).filter(User.id == user_id).first()

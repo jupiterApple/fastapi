@@ -1,8 +1,12 @@
+import json
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from loguru import logger
+from redis import Redis
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db, get_current_user
+from app.api.deps import get_cache, get_current_user, get_db
+from app.core.config import settings
 from app.core.security import get_password_hash
 from app.models.user import User
 from app.schemas.user import UserCreate, UserRead, UserUpdate
@@ -16,6 +20,16 @@ RESPONSES = {
     500: {"description": "Internal Server Error"},
 }
 
+USER_CACHE_PREFIX = "cache:user:"
+USERS_LIST_CACHE_PREFIX = "cache:users:list:"
+
+
+def _invalidate_users_list(cache: Redis) -> None:
+    keys = list(cache.scan_iter(f"{USERS_LIST_CACHE_PREFIX}*"))
+    if keys:
+        cache.delete(*keys)
+        logger.debug("Cache invalidado: {n} chave(s) de listagem", n=len(keys))
+
 
 @router.get("/me", response_model=UserRead, responses=RESPONSES)
 def read_current_user(current_user: User = Depends(get_current_user)):
@@ -28,6 +42,7 @@ def list_users(
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db),
+    cache: Redis = Depends(get_cache),
     current_user: User = Depends(get_current_user),
 ):
     logger.info(
@@ -36,13 +51,24 @@ def list_users(
         skip=skip,
         limit=limit,
     )
-    return db.query(User).offset(skip).limit(limit).all()
+    cache_key = f"{USERS_LIST_CACHE_PREFIX}{skip}:{limit}"
+    cached = cache.get(cache_key)
+    if cached:
+        logger.debug("Cache hit key={key}", key=cache_key)
+        return json.loads(cached)
+
+    logger.debug("Cache miss key={key}", key=cache_key)
+    users = db.query(User).offset(skip).limit(limit).all()
+    payload = [UserRead.model_validate(u).model_dump(mode="json") for u in users]
+    cache.set(cache_key, json.dumps(payload), ex=settings.CACHE_TTL_SECONDS)
+    return users
 
 
 @router.get("/{user_id}", response_model=UserRead, responses=RESPONSES)
 def get_user(
     user_id: int,
     db: Session = Depends(get_db),
+    cache: Redis = Depends(get_cache),
     current_user: User = Depends(get_current_user),
 ):
     logger.info(
@@ -50,9 +76,19 @@ def get_user(
         requester=current_user.id,
         target=user_id,
     )
+    cache_key = f"{USER_CACHE_PREFIX}{user_id}"
+    cached = cache.get(cache_key)
+    if cached:
+        logger.debug("Cache hit key={key}", key=cache_key)
+        return json.loads(cached)
+
+    logger.debug("Cache miss key={key}", key=cache_key)
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+
+    payload = UserRead.model_validate(user).model_dump(mode="json")
+    cache.set(cache_key, json.dumps(payload), ex=settings.CACHE_TTL_SECONDS)
     return user
 
 
@@ -65,6 +101,7 @@ def get_user(
 def create_user(
     user_in: UserCreate,
     db: Session = Depends(get_db),
+    cache: Redis = Depends(get_cache),
     current_user: User = Depends(get_current_user),
 ):
     logger.info(
@@ -90,6 +127,7 @@ def create_user(
         logger.exception("Error saving new user to database")
         raise HTTPException(status_code=500, detail="Unable to create user")
     db.refresh(user)
+    _invalidate_users_list(cache)
     logger.info("User created successfully user_id={user_id}", user_id=user.id)
     return user
 
@@ -99,6 +137,7 @@ def update_user(
     user_id: int,
     user_in: UserUpdate,
     db: Session = Depends(get_db),
+    cache: Redis = Depends(get_cache),
     current_user: User = Depends(get_current_user),
 ):
     logger.info(
@@ -131,6 +170,8 @@ def update_user(
         logger.exception("Error updating user user_id={user_id}", user_id=user_id)
         raise HTTPException(status_code=500, detail="Unable to update user")
     db.refresh(user)
+    cache.delete(f"{USER_CACHE_PREFIX}{user_id}")
+    _invalidate_users_list(cache)
     logger.info("User updated user_id={user_id}", user_id=user.id)
     return user
 
@@ -143,6 +184,7 @@ def update_user(
 def delete_user(
     user_id: int,
     db: Session = Depends(get_db),
+    cache: Redis = Depends(get_cache),
     current_user: User = Depends(get_current_user),
 ):
     logger.info(
@@ -161,5 +203,6 @@ def delete_user(
         db.rollback()
         logger.exception("Error deleting user user_id={user_id}", user_id=user_id)
         raise HTTPException(status_code=500, detail="Unable to delete user")
+    cache.delete(f"{USER_CACHE_PREFIX}{user_id}")
+    _invalidate_users_list(cache)
     logger.info("User deleted user_id={user_id}", user_id=user_id)
-    return None

@@ -27,6 +27,17 @@ services:
       db:
         condition: service_healthy
 
+  redis:
+    image: redis:7-alpine
+    restart: always
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   backend:
     build: .
     restart: always
@@ -35,10 +46,13 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     ports:
       - "8000:8000"
     volumes:
       - ./app:/app/app
+      - ./tests:/app/tests
     command: >
       uvicorn app.main:app
       --host 0.0.0.0

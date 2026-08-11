@@ -8,6 +8,10 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
+    # Cache
+    REDIS_URL: str = "redis://redis:6379/0"
+    CACHE_TTL_SECONDS: int = 60
+
     # Seed do usuário inicial
     FIRST_SUPERUSER_EMAIL: str | None = None
     FIRST_SUPERUSER_PASSWORD: str | None = None
