@@ -59,5 +59,19 @@ services:
       --port 8000
       --reload
 
+  worker:
+    build: .
+    restart: always
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./app:/app/app
+    command: celery -A app.core.celery_app worker --loglevel=info
+
 volumes:
   db_data:

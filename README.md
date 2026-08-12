@@ -14,6 +14,7 @@ Backend mínimo de estudo: autenticação JWT e CRUD completo de usuários.
 - Loguru (logging estruturado)
 - Adminer (UI web do MySQL)
 - Redis (cache de leitura em `/users`)
+- Celery (task assíncrona de email de boas-vindas, Redis como broker)
 
 ---
 
@@ -57,6 +58,8 @@ Arquivo: [.env](.env)
 | `SQLALCHEMY_DATABASE_URL`     | sim         | URL do banco                               |
 | `REDIS_URL`                   | não         | URL do Redis (default `redis://redis:6379/0`) |
 | `CACHE_TTL_SECONDS`           | não         | TTL do cache de leitura em segundos (default 60) |
+| `CELERY_BROKER_URL`           | não         | URL do broker do Celery (default `redis://redis:6379/1`) |
+| `CELERY_RESULT_BACKEND`       | não         | URL do result backend do Celery (default `redis://redis:6379/1`) |
 | `FIRST_SUPERUSER_EMAIL`       | não         | Email do seed inicial                      |
 | `FIRST_SUPERUSER_PASSWORD`    | não         | Senha do seed (apenas dev)                 |
 | `FIRST_SUPERUSER_NAME`        | não         | Nome do seed                               |
@@ -69,6 +72,7 @@ Arquivo: [.env](.env)
 ```bash
 docker compose up -d --build     # sobe
 docker compose logs -f backend   # logs em tempo real
+docker compose logs -f worker    # logs do worker Celery
 docker compose exec backend pytest -v  # roda os testes
 docker compose down              # derruba
 docker compose down -v           # derruba + apaga volume do banco
@@ -150,6 +154,7 @@ app/
 │       └── users.py         # CRUD /users
 ├── core/
 │   ├── cache.py             # client Redis
+│   ├── celery_app.py        # instância Celery (broker/backend)
 │   ├── config.py            # Settings (pydantic-settings)
 │   ├── logging.py           # Loguru
 │   └── security.py          # JWT + hashing
@@ -163,12 +168,15 @@ app/
 ├── schemas/
 │   ├── auth.py              # LoginInput, Token
 │   └── user.py              # UserCreate/Read/Update
+├── tasks/
+│   └── user_tasks.py        # send_welcome_email (Celery task)
 └── main.py
 
 tests/
 ├── conftest.py              # fixtures: client, db, cache
 ├── test_auth.py
-└── test_users.py
+├── test_users.py
+└── test_tasks.py
 
 .env
 docker-compose.yml

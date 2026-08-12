@@ -12,6 +12,10 @@ class Settings(BaseSettings):
     REDIS_URL: str = "redis://redis:6379/0"
     CACHE_TTL_SECONDS: int = 60
 
+    # Filas (Celery) — DB Redis separado do cache
+    CELERY_BROKER_URL: str = "redis://redis:6379/1"
+    CELERY_RESULT_BACKEND: str = "redis://redis:6379/1"
+
     # Seed do usuário inicial
     FIRST_SUPERUSER_EMAIL: str | None = None
     FIRST_SUPERUSER_PASSWORD: str | None = None
