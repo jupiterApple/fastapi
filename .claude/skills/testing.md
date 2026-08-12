@@ -5,8 +5,6 @@ description: Padrão de testes — pytest + TestClient síncrono (não httpx.Asy
 
 # testing
 
-**Status:** ainda não há testes automatizados no projeto. Esta skill define o padrão quando começarem a ser adicionados.
-
 ## Ferramentas
 
 - `pytest` — runner
@@ -15,58 +13,81 @@ description: Padrão de testes — pytest + TestClient síncrono (não httpx.Asy
 
 Não usar `httpx.AsyncClient` nem `pytest-asyncio` — quebra a simetria com o código síncrono.
 
-## Setup inicial (quando for implementar)
+## Dependências
 
-Adicionar ao [requirements.txt](../../requirements.txt) em dev:
+Em [requirements.txt](../../requirements.txt), seção dev/test:
 ```
 pytest
 pytest-cov
+httpx
+fakeredis
 ```
+
+`fakeredis` substitui o Redis real nos testes — mesmo espírito do SQLite in-memory pro banco: zero infra externa na CI.
 
 Estrutura:
 ```
 tests/
 ├── __init__.py
-├── conftest.py          # fixtures (client, db)
+├── conftest.py          # fixtures (client, db, cache)
 ├── test_auth.py
 └── test_users.py
 ```
 
-## `conftest.py` modelo
+## `conftest.py` (real, ver [tests/conftest.py](../../tests/conftest.py))
 
 ```python
+import fakeredis
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
 
 from app.main import app
-from app.api.deps import get_db
+from app.api.deps import get_cache, get_db
 from app.db.base_class import Base
 
-TEST_DB_URL = "sqlite:///:memory:"
-engine = create_engine(TEST_DB_URL, connect_args={"check_same_thread": False})
-TestingSessionLocal = sessionmaker(bind=engine)
+_test_engine = create_engine(
+    "sqlite:///:memory:",
+    connect_args={"check_same_thread": False},
+    poolclass=StaticPool,  # garante que todas as conexões usam o mesmo BD in-memory
+)
+TestingSessionLocal = sessionmaker(bind=_test_engine)
 
 
 @pytest.fixture
 def db():
-    Base.metadata.create_all(bind=engine)
+    Base.metadata.create_all(bind=_test_engine)
     session = TestingSessionLocal()
     yield session
     session.close()
-    Base.metadata.drop_all(bind=engine)
+    Base.metadata.drop_all(bind=_test_engine)
 
 
 @pytest.fixture
-def client(db):
+def cache():
+    return fakeredis.FakeStrictRedis(decode_responses=True)
+
+
+@pytest.fixture
+def client(db, cache):
+    # Suspende on_startup (conectaria ao MySQL) — tabelas já criadas pelo fixture db
+    saved_startup = app.router.on_startup[:]
+    app.router.on_startup.clear()
+
     def override_get_db():
         yield db
+
     app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_cache] = lambda: cache
     with TestClient(app) as c:
         yield c
     app.dependency_overrides.clear()
+    app.router.on_startup.extend(saved_startup)
 ```
+
+Endpoint que usa `Depends(get_cache)` (ver [database](database.md) pro equivalente com `get_db`) recebe o `fakeredis` automaticamente nos testes — nenhum teste precisa mockar `redis` na mão.
 
 ## Exemplo: teste de login
 

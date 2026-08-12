@@ -14,6 +14,7 @@ Definidos em [docker-compose.yml](../../docker-compose.yml):
 | backend  | build local        | 8000       | API FastAPI                              |
 | db       | `mysql:8`          | 3307       | MySQL (user/pass `app`/`app`, db `app`)  |
 | adminer  | `adminer`          | 8081       | UI web para inspecionar o MySQL          |
+| redis    | `redis:7-alpine`   | 6379       | Cache (ver [database](database.md) e [docs/pdi/02-redis.md](../../docs/pdi/02-redis.md)) |
 
 ## Comandos do dia-a-dia
 
@@ -55,6 +56,7 @@ Testar com root (`-uroot -proot`) dá falso positivo: o MySQL responde ao ping a
 | Mudou schema do modelo e não refletiu      | `docker compose down -v && docker compose up -d --build` (não há Alembic) |
 | Porta 8000 ocupada                         | outro processo usando; `docker compose down` ou mudar `ports:` no compose |
 | `pip install` lento no build               | já está cacheado na layer `COPY requirements.txt`; só invalida quando o arquivo muda |
+| `pytest` não coleta nenhum teste no container | `tests/` só existe no container porque o compose monta `./tests:/app/tests` (assim como `./app:/app/app`) — o `Dockerfile` não faz `COPY tests` de propósito (imagem de produção não carrega testes) |
 
 ## Reset total do banco
 
