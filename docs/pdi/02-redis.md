@@ -2,6 +2,36 @@
 
 ## Conceito
 
+### O que é o Redis
+
+Redis (**RE**mote **DI**ctionary **S**erver) é um banco de dados **em memória**, chave-valor, mas com estruturas de dados ricas — não só `string`. Por viver na RAM em vez de disco, uma operação simples custa microssegundos, contra os milissegundos de uma query no MySQL — é essa diferença de ordem de grandeza que o torna útil como cache: mais rápido que o banco de origem, sempre.
+
+É single-threaded pro processamento de comandos (cada comando roda até o fim antes do próximo começar), o que elimina problemas de concorrência internos e faz cada operação individual ser atômica de graça — não precisa de lock explícito pra um `INCR` ou um `SET`, por exemplo.
+
+Cada estrutura de dados resolve um problema diferente:
+
+| Estrutura | Serve pra |
+|-----------|-----------|
+| `String` | cache simples (é o que este POC usa), contadores (`INCR`) |
+| `Hash` | objetos com campos (alternativa a serializar um `string` JSON) |
+| `List` | fila simples FIFO/LIFO |
+| `Set` / `Sorted Set` | coleções únicas; `Sorted Set` mantém itens ordenados por score — base de ranking/leaderboard |
+| `Pub/Sub` | mensageria em tempo real, não persistente (quem não está ouvindo, perde) |
+| `Streams` | log de eventos persistente, mais parecido com Kafka |
+
+### Onde se aplica (além de cache)
+
+- **Cache** (este POC) — evita re-consultar um banco lento pra dados lidos com frequência e que toleram alguma defasagem.
+- **Broker de fila de mensagens** — Celery, RQ e afins usam Redis pra enfileirar trabalho assíncrono (ver [03-filas.md](03-filas.md), que reaproveita esta mesma instância com um DB lógico separado).
+- **Sessão/estado compartilhado** — guardar sessão de usuário fora do processo da API permite rodar múltiplas instâncias da API sem "sticky session" (qualquer instância atende qualquer usuário).
+- **Rate limiting** — contador com TTL por IP/usuário (`INCR` + `EXPIRE`) pra limitar tentativas de login, requests por minuto etc.
+- **Locks distribuídos** — coordenar acesso exclusivo a um recurso entre múltiplos processos/instâncias (`SET chave valor NX EX ttl`).
+- **Leaderboard/ranking em tempo real** — `Sorted Set` mantém itens ordenados por score com inserção/consulta O(log N).
+
+O que essas aplicações têm em comum: dado **pequeno**, **acessado com frequência**, onde perder a informação num crash não é catastrófico (por padrão Redis não é tão durável quanto um banco relacional — existe persistência opcional via RDB/AOF, mas o caso de uso típico assume que o dado pode ser reconstruído a partir da fonte de verdade, que é o banco).
+
+### Cache-aside (o padrão usado aqui)
+
 **Cache-aside** (lazy loading) é o padrão mais comum de cache: a aplicação primeiro consulta o cache; em caso de miss, busca no banco e grava o resultado no cache antes de responder. Escritas invalidam as chaves afetadas em vez de atualizá-las diretamente — mais simples e menos propenso a inconsistência do que manter cache e banco sincronizados em toda mutação.
 
 O objetivo é reduzir carga no MySQL em rotas de leitura frequente, ao custo de aceitar dados potencialmente desatualizados por até `CACHE_TTL_SECONDS` (ou até a próxima escrita, que invalida na hora).
