@@ -1,4 +1,4 @@
-# Instruções para o Claude Code — Backend APP_FC_26
+# Instruções para o Claude Code — PDI Backend
 
 ## Sobre
 

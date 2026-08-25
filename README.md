@@ -1,4 +1,4 @@
-# APP_FC_26 — Backend FastAPI + JWT + CRUD de Users
+# PDI Backend — FastAPI + JWT + CRUD de Users
 
 Backend mínimo de estudo: autenticação JWT e CRUD completo de usuários.
 

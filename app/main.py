@@ -10,7 +10,7 @@ from app.db.base_class import Base
 from app.db.seed import seed_initial_user
 from app.db.session import SessionLocal, engine
 
-app = FastAPI(title="APP_FC_26 — FastAPI JWT + Users")
+app = FastAPI(title="PDI Backend — FastAPI JWT + Users")
 
 origins = [o.strip() for o in settings.BACKEND_CORS_ORIGINS.split(",") if o.strip()]
 app.add_middleware(

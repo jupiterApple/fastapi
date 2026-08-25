@@ -1,7 +1,7 @@
 {
   "info": {
-    "_postman_id": "APP_FC_26_API",
-    "name": "APP FC 26 - FastAPI Backend",
+    "_postman_id": "PDI_Backend_API",
+    "name": "PDI Backend - FastAPI",
     "description": "Coleção de endpoints da API backend FastAPI + JWT.\n\n🔐 **Autenticação**: JWT Bearer Token (duração: 30 min)\n📍 **Base URL**: {{base_url}}/api/v1\n\n**Quick Start**:\n1. Fazer login (POST /auth/login) — o token é salvo automaticamente na variável `auth_token`\n2. Chamar qualquer endpoint protegido — o token é injetado via `Authorization: Bearer <token>`",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },

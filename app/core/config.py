@@ -2,7 +2,7 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    PROJECT_NAME: str = "APP_FC_26"
+    PROJECT_NAME: str = "PDI Backend"
     SQLALCHEMY_DATABASE_URL: str
     SECRET_KEY: str
     ALGORITHM: str = "HS256"
@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     SMTP_PORT: int = 587
     SMTP_USER: str
     SMTP_PASSWORD: str
-    SMTP_FROM: str = "APP_FC_26 <no-reply@app-fc26.dev>"
+    SMTP_FROM: str = "PDI Backend <no-reply@pdi-backend.dev>"
 
     # Seed do usuário inicial
     FIRST_SUPERUSER_EMAIL: str | None = None

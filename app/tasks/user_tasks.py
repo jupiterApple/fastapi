@@ -16,7 +16,7 @@ _HTML_TEMPLATE = """\
           <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="background-color:#ffffff; border-radius:8px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,0.12);">
             <tr>
               <td style="background-color:#4f46e5; padding:24px 32px;">
-                <span style="color:#ffffff; font-size:20px; font-weight:600;">APP_FC_26</span>
+                <span style="color:#ffffff; font-size:20px; font-weight:600;">PDI Backend</span>
               </td>
             </tr>
             <tr>
