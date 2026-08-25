@@ -15,6 +15,7 @@ Definidos em [docker-compose.yml](../../docker-compose.yml):
 | db       | `mysql:8`          | 3307       | MySQL (user/pass `app`/`app`, db `app`)  |
 | adminer  | `adminer`          | 8081       | UI web para inspecionar o MySQL          |
 | redis    | `redis:7-alpine`   | 6379       | Cache (ver [database](database.md) e [docs/pdi/02-redis.md](../../docs/pdi/02-redis.md)) |
+| worker   | build local (mesma imagem do backend) | — (sem porta) | Processa fila do Celery (ver [docs/pdi/03-filas.md](../../docs/pdi/03-filas.md)) |
 
 ## Comandos do dia-a-dia
 
@@ -22,6 +23,7 @@ Definidos em [docker-compose.yml](../../docker-compose.yml):
 docker compose up -d --build          # sobe com rebuild
 docker compose up -d                  # sobe sem rebuild (após mudança em .py)
 docker compose logs -f backend        # acompanha logs do backend
+docker compose logs -f worker         # acompanha logs do worker Celery
 docker compose logs -f db             # logs do MySQL
 docker compose ps                     # status dos containers
 docker compose down                   # derruba (preserva volumes)
@@ -57,6 +59,7 @@ Testar com root (`-uroot -proot`) dá falso positivo: o MySQL responde ao ping a
 | Porta 8000 ocupada                         | outro processo usando; `docker compose down` ou mudar `ports:` no compose |
 | `pip install` lento no build               | já está cacheado na layer `COPY requirements.txt`; só invalida quando o arquivo muda |
 | `pytest` não coleta nenhum teste no container | `tests/` só existe no container porque o compose monta `./tests:/app/tests` (assim como `./app:/app/app`) — o `Dockerfile` não faz `COPY tests` de propósito (imagem de produção não carrega testes) |
+| Mudou código de uma task e o worker não reflete | Diferente do `backend` (`uvicorn --reload`), o `worker` **não** recarrega sozinho — precisa `docker compose restart worker` |
 
 ## Reset total do banco
 

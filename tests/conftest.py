@@ -7,7 +7,12 @@ from sqlalchemy.pool import StaticPool
 
 from app.main import app
 from app.api.deps import get_cache, get_db
+from app.core.celery_app import celery_app
 from app.db.base_class import Base
+
+# Tasks rodam de forma síncrona nos testes — sem broker/worker real,
+# mesmo espírito do fakeredis e do SQLite in-memory.
+celery_app.conf.update(task_always_eager=True, task_eager_propagates=True)
 
 _test_engine = create_engine(
     "sqlite:///:memory:",

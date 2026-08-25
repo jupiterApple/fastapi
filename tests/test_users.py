@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from app.core.security import get_password_hash
 from app.models.user import User
 
@@ -53,6 +55,21 @@ def test_create_user_invalida_cache_da_listagem(client, db):
     listagem = client.get("/api/v1/users/", headers=headers)
     emails = [u["email"] for u in listagem.json()]
     assert "novo@test.com" in emails
+
+
+def test_create_user_dispara_task_de_email_de_boas_vindas(client, db):
+    headers = _create_user_and_login(client, db)
+
+    with patch("app.api.v1.users.send_welcome_email.delay") as mock_delay:
+        res = client.post(
+            "/api/v1/users/",
+            headers=headers,
+            json={"email": "boasvindas@test.com", "full_name": "Novo", "password": "123456"},
+        )
+    assert res.status_code == 201
+
+    novo_id = res.json()["id"]
+    mock_delay.assert_called_once_with(novo_id, "boasvindas@test.com")
 
 
 def test_update_user_invalida_cache_do_usuario(client, db):

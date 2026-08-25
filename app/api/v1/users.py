@@ -10,6 +10,7 @@ from app.core.config import settings
 from app.core.security import get_password_hash
 from app.models.user import User
 from app.schemas.user import UserCreate, UserRead, UserUpdate
+from app.tasks.user_tasks import send_welcome_email
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -128,6 +129,7 @@ def create_user(
         raise HTTPException(status_code=500, detail="Unable to create user")
     db.refresh(user)
     _invalidate_users_list(cache)
+    send_welcome_email.delay(user.id, user.email)
     logger.info("User created successfully user_id={user_id}", user_id=user.id)
     return user
 
