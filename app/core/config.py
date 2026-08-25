@@ -16,6 +16,13 @@ class Settings(BaseSettings):
     CELERY_BROKER_URL: str = "redis://redis:6379/1"
     CELERY_RESULT_BACKEND: str = "redis://redis:6379/1"
 
+    # Email (SMTP — Ethereal em dev, nunca entrega de verdade)
+    SMTP_HOST: str = "smtp.ethereal.email"
+    SMTP_PORT: int = 587
+    SMTP_USER: str
+    SMTP_PASSWORD: str
+    SMTP_FROM: str = "APP_FC_26 <no-reply@app-fc26.dev>"
+
     # Seed do usuário inicial
     FIRST_SUPERUSER_EMAIL: str | None = None
     FIRST_SUPERUSER_PASSWORD: str | None = None
