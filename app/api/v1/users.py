@@ -129,7 +129,7 @@ def create_user(
         raise HTTPException(status_code=500, detail="Unable to create user")
     db.refresh(user)
     _invalidate_users_list(cache)
-    send_welcome_email.delay(user.id, user.email)
+    send_welcome_email.delay(user.id, user.email, user.full_name)
     logger.info("User created successfully user_id={user_id}", user_id=user.id)
     return user
 

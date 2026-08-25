@@ -69,7 +69,7 @@ def test_create_user_dispara_task_de_email_de_boas_vindas(client, db):
     assert res.status_code == 201
 
     novo_id = res.json()["id"]
-    mock_delay.assert_called_once_with(novo_id, "boasvindas@test.com")
+    mock_delay.assert_called_once_with(novo_id, "boasvindas@test.com", "Novo")
 
 
 def test_update_user_invalida_cache_do_usuario(client, db):
