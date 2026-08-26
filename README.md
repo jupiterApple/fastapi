@@ -1,6 +1,6 @@
 # PDI Backend — FastAPI + JWT + CRUD de Users
 
-Backend mínimo de estudo: autenticação JWT e CRUD completo de usuários.
+Backend de estudo: autenticação JWT, CRUD completo de usuários, cache de leitura com Redis, fila assíncrona com Celery (email de boas-vindas via Ethereal) e monitoramento das tasks com Flower.
 
 ---
 
@@ -82,6 +82,7 @@ Arquivo: [.env](.env)
 docker compose up -d --build     # sobe
 docker compose logs -f backend   # logs em tempo real
 docker compose logs -f worker    # logs do worker Celery
+docker compose logs -f flower    # logs da UI do Flower
 docker compose exec backend pytest -v  # roda os testes
 docker compose down              # derruba
 docker compose down -v           # derruba + apaga volume do banco
@@ -190,6 +191,7 @@ tests/
 .env
 docker-compose.yml
 Dockerfile
+pyproject.toml             # config do ruff
 requirements.txt
 API_Collection.postman_collection.json
 ```
