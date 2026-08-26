@@ -16,6 +16,7 @@ Definidos em [docker-compose.yml](../../docker-compose.yml):
 | adminer  | `adminer`          | 8081       | UI web para inspecionar o MySQL          |
 | redis    | `redis:7-alpine`   | 6379       | Cache (ver [database](database.md) e [docs/pdi/02-redis.md](../../docs/pdi/02-redis.md)) |
 | worker   | build local (mesma imagem do backend) | — (sem porta) | Processa fila do Celery (ver [docs/pdi/03-filas.md](../../docs/pdi/03-filas.md)) |
+| flower   | build local (mesma imagem do backend) | 5555       | UI web pra acompanhar tasks do Celery em tempo real |
 
 ## Comandos do dia-a-dia
 

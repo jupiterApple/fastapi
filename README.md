@@ -15,6 +15,7 @@ Backend mínimo de estudo: autenticação JWT e CRUD completo de usuários.
 - Adminer (UI web do MySQL)
 - Redis (cache de leitura em `/users`)
 - Celery (task assíncrona de email de boas-vindas, Redis como broker)
+- Flower (UI web pra acompanhar as tasks do Celery em tempo real)
 - Ethereal (SMTP de teste — email real "enviado", nunca entregue de verdade)
 
 ---
@@ -42,6 +43,7 @@ docker compose up -d --build
 | Adminer     | http://localhost:8081                            |
 | MySQL       | `localhost:3307` (user/pass `app`/`app`, db `app`) |
 | Redis       | `localhost:6379`                                 |
+| Flower      | http://localhost:5555                            |
 | Emails enviados | https://ethereal.email/messages (login com `SMTP_USER`/`SMTP_PASSWORD` do [.env](.env)) |
 
 **Credenciais iniciais** (via seed): `admin@local.dev` / `admin123` — definidas em [.env](.env).

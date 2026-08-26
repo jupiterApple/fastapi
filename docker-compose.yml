@@ -71,7 +71,23 @@ services:
         condition: service_healthy
     volumes:
       - ./app:/app/app
-    command: celery -A app.core.celery_app worker --loglevel=info
+    command: celery -A app.core.celery_app worker --loglevel=info -E
+
+  flower:
+    build: .
+    restart: always
+    env_file:
+      - .env
+    environment:
+      FLOWER_UNAUTHENTICATED_API: "true"
+    depends_on:
+      redis:
+        condition: service_healthy
+    ports:
+      - "5555:5555"
+    volumes:
+      - ./app:/app/app
+    command: celery -A app.core.celery_app flower --port=5555
 
 volumes:
   db_data:

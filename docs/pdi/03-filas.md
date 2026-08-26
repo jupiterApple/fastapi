@@ -34,6 +34,16 @@ Componentes:
 - [app/api/v1/users.py](../../app/api/v1/users.py) — `create_user` chama `.delay(...)` em vez de executar a função diretamente.
 - `worker` no [docker-compose.yml](../../docker-compose.yml) — processo Celery separado do `backend`, mesma imagem, comando diferente.
 
+## Observabilidade
+
+Nada aqui é mock quando roda via `docker compose up` — só nos testes (`task_always_eager` + `smtplib.SMTP` mockado, ver [Decisões](#decisões)). Formas de ver a fila funcionando de verdade:
+
+- **Flower** (`http://localhost:5555`) — UI web oficial do Celery: lista de tasks em tempo real, estado (`SUCCESS`/`FAILURE`/`PENDING`), argumentos, resultado, tempo de execução e qual worker processou. Equivalente ao Adminer, só que pra fila em vez do banco.
+- **`docker compose logs -f worker`** — o ciclo de vida de uma task aparece direto no log: `received` → log da própria função → `succeeded in Xs`.
+- **`docker compose exec redis redis-cli MONITOR`** — mostra em tempo real o `LPUSH`/`BRPOP` que o Celery faz no Redis pra publicar e consumir a mensagem (mesmo Redis do [cache](02-redis.md), DB lógico diferente).
+
+O worker roda com a flag `-E` (`--task-events`) — sem ela, o worker não publica eventos de task e o Flower fica sem dados (broker conectado, mas nenhuma task aparece).
+
 ## Diagrama
 
 ```mermaid
@@ -67,6 +77,8 @@ sequenceDiagram
 | Worker como serviço separado no compose | Rodar a task na mesma thread do backend (`BackgroundTasks` do FastAPI) | `BackgroundTasks` roda no mesmo processo da API — se o processo cair ou reiniciar (hot reload), a task se perde; um worker dedicado sobrevive a restart do backend e escala independente |
 | Ethereal como SMTP | Provedor real (SendGrid, SES, Gmail) | Estudo é sobre a fila, não sobre entregabilidade de email — Ethereal dá um SMTP real (autenticação, STARTTLS, resposta do protocolo) sem risco de mandar email de verdade pra alguém |
 | Mockar `smtplib.SMTP` globalmente nos testes (`autouse`) | Mockar só `.delay()` como no teste de wiring | O `task_always_eager=True` faz *qualquer* `POST /users` nos testes executar a task de verdade — sem o mock global, todo teste que cria user tentaria abrir conexão SMTP de verdade |
+| Flower como serviço separado no compose | Rodar `flower` manualmente quando precisar | Serviço próprio (mesma imagem do backend) fica sempre disponível em `docker compose up -d`, igual ao Adminer pro MySQL — não é algo que se liga só quando lembra |
+| `FLOWER_UNAUTHENTICATED_API=true` | Deixar a API do Flower travada (só a UI web funcionaria) | Sem essa env var o Flower retorna 401 em `/api/*` por padrão — ferramenta de dev local, sem risco em expor a API sem auth |
 
 ## O que aprendi
 
@@ -76,6 +88,7 @@ sequenceDiagram
 - `include=[...]` no `Celery(...)` é o que faz o worker descobrir a task no import — sem isso, `celery -A app.core.celery_app worker` sobe sem nenhuma task registrada.
 - Porta 587 + `secure: false` no Ethereal significa submission com **STARTTLS** (conecta em texto claro, depois eleva pra TLS) — diferente da porta 465, que já é TLS implícito desde o `connect()`. `smtplib.SMTP(...).starttls()` é o par certo pra 587; `smtplib.SMTP_SSL(...)` seria o par certo pra 465.
 - `docker compose logs worker` mostra o ciclo completo de uma task (`received` → log da própria função → `succeeded in Xs`) — é o jeito mais direto de confirmar que o fire-and-forget realmente rodou, já que a API não devolve esse resultado pro cliente.
+- Broker conectado não é o mesmo que observável: o Flower conecta no Redis e sobe normalmente mesmo sem a flag `-E` no worker — só fica "vazio", sem nenhuma task listada, porque eventos de task (`task-received`, `task-succeeded` etc.) são publicados separadamente do payload da fila em si.
 
 ## Referências
 
