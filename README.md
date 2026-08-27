@@ -1,6 +1,6 @@
 # PDI Backend — FastAPI + JWT + CRUD de Users
 
-Backend de estudo: autenticação JWT, CRUD completo de usuários, cache de leitura com Redis, fila assíncrona com Celery + RabbitMQ (email de boas-vindas via Ethereal) e monitoramento das tasks com Flower.
+Backend de estudo: autenticação JWT, CRUD completo de usuários, cache de leitura com Redis, fila assíncrona com Celery + RabbitMQ (email de boas-vindas via Ethereal), monitoramento das tasks com Flower e geração de bio via Claude API.
 
 ---
 
@@ -18,6 +18,7 @@ Backend de estudo: autenticação JWT, CRUD completo de usuários, cache de leit
 - Celery (task assíncrona de email de boas-vindas)
 - Flower (UI web pra acompanhar as tasks do Celery em tempo real)
 - Ethereal (SMTP de teste — email real "enviado", nunca entregue de verdade)
+- Claude API — Anthropic (bio gerada por IA no perfil do usuário, `claude-opus-5`)
 
 ---
 
@@ -72,6 +73,8 @@ Arquivo: [.env](.env)
 | `SMTP_USER`                   | sim         | Usuário SMTP (conta de teste do [Ethereal](https://ethereal.email/create)) |
 | `SMTP_PASSWORD`               | sim         | Senha SMTP correspondente                  |
 | `SMTP_FROM`                   | não         | Remetente exibido no email                 |
+| `ANTHROPIC_API_KEY`           | sim         | Chave da Claude API (gera bio em `POST /users/{id}/bio`) |
+| `ANTHROPIC_MODEL`             | não         | Modelo da Claude API (default `claude-opus-5`) |
 | `FIRST_SUPERUSER_EMAIL`       | não         | Email do seed inicial                      |
 | `FIRST_SUPERUSER_PASSWORD`    | não         | Senha do seed (apenas dev)                 |
 | `FIRST_SUPERUSER_NAME`        | não         | Nome do seed                               |
@@ -115,6 +118,7 @@ Todos sob o prefixo `/api/v1`. Swagger completo: http://localhost:8000/docs
 | POST   | `/users/`         | ✅   | Cria usuário                   |
 | PUT    | `/users/{id}`     | ✅   | Atualiza usuário (parcial)     |
 | DELETE | `/users/{id}`     | ✅   | Remove usuário                 |
+| POST   | `/users/{id}/bio` | ✅   | Gera bio via Claude API (não persiste) |
 
 ---
 
@@ -169,6 +173,7 @@ app/
 │   ├── cache.py             # client Redis
 │   ├── celery_app.py        # instância Celery (broker/backend)
 │   ├── config.py            # Settings (pydantic-settings)
+│   ├── llm.py                # cliente Claude API + generate_user_bio
 │   ├── logging.py           # Loguru
 │   └── security.py          # JWT + hashing
 ├── db/
@@ -180,7 +185,7 @@ app/
 │   └── user.py
 ├── schemas/
 │   ├── auth.py              # LoginInput, Token
-│   └── user.py              # UserCreate/Read/Update
+│   └── user.py              # UserCreate/Read/Update, UserBioGenerated/Read
 ├── tasks/
 │   └── user_tasks.py        # send_welcome_email (Celery task)
 └── main.py

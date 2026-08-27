@@ -104,6 +104,22 @@
           "response": []
         },
         {
+          "name": "Generate Bio (IA)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{auth_token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/1/bio",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "users", "1", "bio"]
+            },
+            "description": "Gera uma bio curta e estruturada (headline, bio, tone) via Claude API — não persiste no banco, gerada a cada chamada.\n\n🔒 **Requer Autenticação**: Sim\n\n⚠️ **Chamada real e paga à Claude API** — requer `ANTHROPIC_API_KEY` válida no `.env` do backend.\n\n**Status Codes:**\n- `200` - Sucesso\n- `401` - Token inválido/expirado\n- `404` - Usuário não encontrado\n- `500` - Erro na chamada à Claude API"
+          },
+          "response": []
+        },
+        {
           "name": "Create User",
           "request": {
             "method": "POST",

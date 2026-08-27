@@ -26,6 +26,7 @@ Sempre consulte a skill relevante antes de gerar código:
 | `logging`          | Loguru — níveis, contexto, o que NÃO logar                       |
 | `testing`          | pytest + TestClient síncrono                                     |
 | `docker`           | compose, portas, hot reload, healthcheck                         |
+| `postman-collection` | manter [API_Collection.postman_collection.json](API_Collection.postman_collection.json) sincronizada — todo endpoint novo/alterado/removido |
 
 ## Regras rígidas
 
@@ -39,6 +40,7 @@ Sempre consulte a skill relevante antes de gerar código:
 8. Não migrar SQLAlchemy para async sem pedido explícito.
 9. Código e mensagens de commit em **português**.
 10. Commits descrevem **o estado atual** (o que o código é), não a transformação ("enxugar/remover/limpar" são banidos do título).
+11. Todo código novo segue o padrão mais idiomático da stack (type hints completos, nomes claros, sem código morto/comentado, sem duplicação) — nível de qualidade de PR revisado por time sênior, não de rascunho funcional. Reaproveitar padrão existente no projeto antes de inventar um novo (ver skills).
 
 ## Antes de editar
 
@@ -52,3 +54,4 @@ Sempre consulte a skill relevante antes de gerar código:
 - Swagger em http://localhost:8000/docs reconhece a rota com `responses` documentados?
 - Se houve mudança de schema do banco, o container foi reiniciado? Volume apagado se for breaking change (`docker compose down -v`)?
 - Credencial seed (`admin@local.dev` / `admin123`) ainda autentica?
+- Endpoint novo, alterado ou removido → [API_Collection.postman_collection.json](API_Collection.postman_collection.json) atualizada (skill `postman-collection`) e testada de verdade contra a API rodando?

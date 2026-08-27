@@ -7,9 +7,10 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_cache, get_current_user, get_db
 from app.core.config import settings
+from app.core.llm import generate_user_bio
 from app.core.security import get_password_hash
 from app.models.user import User
-from app.schemas.user import UserCreate, UserRead, UserUpdate
+from app.schemas.user import UserBioRead, UserCreate, UserRead, UserUpdate
 from app.tasks.user_tasks import send_welcome_email
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -91,6 +92,25 @@ def get_user(
     payload = UserRead.model_validate(user).model_dump(mode="json")
     cache.set(cache_key, json.dumps(payload), ex=settings.CACHE_TTL_SECONDS)
     return user
+
+
+@router.post("/{user_id}/bio", response_model=UserBioRead, responses=RESPONSES)
+def generate_bio(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    logger.info(
+        "Bio requested by user_id={requester} target_id={target}",
+        requester=current_user.id,
+        target=user_id,
+    )
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    generated = generate_user_bio(user)
+    return UserBioRead(user_id=user.id, **generated.model_dump())
 
 
 @router.post(

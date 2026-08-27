@@ -8,7 +8,7 @@ Base: FastAPI + JWT + CRUD de users (branch `main`).
 | 2  | Redis                                              | —            | `poc/02-redis` | [02-redis.md](02-redis.md) | ✅ concluído |
 | 3  | Filas (Celery)                                     | —            | `poc/03-filas` | [03-filas.md](03-filas.md) | ✅ concluído |
 | 4  | RabbitMQ como broker alternativo                   | Baixa        | `poc/04-rabbitmq` | [04-rabbitmq.md](04-rabbitmq.md) | ✅ concluído |
-| 5  | Engenharia de prompt                               | Baixa-média  | —      | —   | ⏳ pendente |
+| 5  | Engenharia de prompt                               | Baixa-média  | `poc/05-engenharia-de-prompt` | [05-engenharia-de-prompt.md](05-engenharia-de-prompt.md) | ✅ concluído |
 | 6  | BFF                                                 | Baixa-média  | —      | —   | ⏳ pendente |
 | 7  | AI Skills                                          | Média        | —      | —   | ⏳ pendente |
 | 8  | AI Output Verification                             | Média        | —      | —   | ⏳ pendente |

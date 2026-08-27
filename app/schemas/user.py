@@ -1,3 +1,5 @@
+from typing import Literal
+
 from pydantic import BaseModel, EmailStr
 
 
@@ -21,3 +23,13 @@ class UserRead(UserBase):
 
     class Config:
         from_attributes = True
+
+
+class UserBioGenerated(BaseModel):
+    headline: str
+    bio: str
+    tone: Literal["formal", "casual", "tecnico"]
+
+
+class UserBioRead(UserBioGenerated):
+    user_id: int

@@ -24,6 +24,10 @@ class Settings(BaseSettings):
     SMTP_PASSWORD: str
     SMTP_FROM: str = "PDI Backend <no-reply@pdi-backend.dev>"
 
+    # IA (Claude API) — geração de bio via prompt engineering
+    ANTHROPIC_API_KEY: str
+    ANTHROPIC_MODEL: str = "claude-opus-5"
+
     # Seed do usuário inicial
     FIRST_SUPERUSER_EMAIL: str | None = None
     FIRST_SUPERUSER_PASSWORD: str | None = None

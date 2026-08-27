@@ -2,6 +2,7 @@ from unittest.mock import patch
 
 from app.core.security import get_password_hash
 from app.models.user import User
+from app.schemas.user import UserBioGenerated
 
 
 def _create_user_and_login(client, db, email="owner@test.com", password="senha123"):
@@ -107,4 +108,27 @@ def test_delete_user_invalida_cache_do_usuario(client, db):
 def test_get_user_nao_encontrado(client, db):
     headers = _create_user_and_login(client, db)
     res = client.get("/api/v1/users/999999", headers=headers)
+    assert res.status_code == 404
+
+
+def test_generate_bio_retorna_estrutura_esperada(client, db):
+    headers = _create_user_and_login(client, db)
+    target = db.query(User).filter(User.email == "owner@test.com").first()
+
+    fake_bio = UserBioGenerated(headline="Dev backend", bio="Owner integra a base de estudo.", tone="formal")
+    with patch("app.api.v1.users.generate_user_bio", return_value=fake_bio):
+        res = client.post(f"/api/v1/users/{target.id}/bio", headers=headers)
+
+    assert res.status_code == 200
+    assert res.json() == {
+        "user_id": target.id,
+        "headline": "Dev backend",
+        "bio": "Owner integra a base de estudo.",
+        "tone": "formal",
+    }
+
+
+def test_generate_bio_usuario_nao_encontrado(client, db):
+    headers = _create_user_and_login(client, db)
+    res = client.post("/api/v1/users/999999/bio", headers=headers)
     assert res.status_code == 404
