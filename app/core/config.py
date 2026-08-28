@@ -12,8 +12,9 @@ class Settings(BaseSettings):
     REDIS_URL: str = "redis://redis:6379/0"
     CACHE_TTL_SECONDS: int = 60
 
-    # Filas (Celery) — DB Redis separado do cache
-    CELERY_BROKER_URL: str = "redis://redis:6379/1"
+    # Filas (Celery) — broker é RabbitMQ (AMQP); result backend segue no Redis
+    # (RabbitMQ não é indicado como result backend do Celery, só como broker)
+    CELERY_BROKER_URL: str = "amqp://app:app@rabbitmq:5672//"
     CELERY_RESULT_BACKEND: str = "redis://redis:6379/1"
 
     # Email (SMTP — Ethereal em dev, nunca entrega de verdade)
@@ -22,6 +23,10 @@ class Settings(BaseSettings):
     SMTP_USER: str
     SMTP_PASSWORD: str
     SMTP_FROM: str = "PDI Backend <no-reply@pdi-backend.dev>"
+
+    # IA (Claude API) — geração de bio via prompt engineering
+    ANTHROPIC_API_KEY: str
+    ANTHROPIC_MODEL: str = "claude-opus-5"
 
     # Seed do usuário inicial
     FIRST_SUPERUSER_EMAIL: str | None = None

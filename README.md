@@ -1,6 +1,6 @@
 # PDI Backend — FastAPI + JWT + CRUD de Users
 
-Backend de estudo: autenticação JWT, CRUD completo de usuários, cache de leitura com Redis, fila assíncrona com Celery (email de boas-vindas via Ethereal) e monitoramento das tasks com Flower.
+Backend de estudo: autenticação JWT, CRUD completo de usuários, cache de leitura com Redis, fila assíncrona com Celery + RabbitMQ (email de boas-vindas via Ethereal), monitoramento das tasks com Flower e geração de bio via Claude API.
 
 ---
 
@@ -13,10 +13,12 @@ Backend de estudo: autenticação JWT, CRUD completo de usuários, cache de leit
 - JWT HS256 (`python-jose`) + `passlib[pbkdf2_sha256]`
 - Loguru (logging estruturado)
 - Adminer (UI web do MySQL)
-- Redis (cache de leitura em `/users`)
-- Celery (task assíncrona de email de boas-vindas, Redis como broker)
+- Redis (cache de leitura em `/users` e result backend do Celery)
+- RabbitMQ (broker do Celery, via AMQP)
+- Celery (task assíncrona de email de boas-vindas)
 - Flower (UI web pra acompanhar as tasks do Celery em tempo real)
 - Ethereal (SMTP de teste — email real "enviado", nunca entregue de verdade)
+- Claude API — Anthropic (bio gerada por IA no perfil do usuário, `claude-opus-5`)
 
 ---
 
@@ -43,6 +45,8 @@ docker compose up -d --build
 | Adminer     | http://localhost:8081                            |
 | MySQL       | `localhost:3307` (user/pass `app`/`app`, db `app`) |
 | Redis       | `localhost:6379`                                 |
+| RabbitMQ (AMQP) | `localhost:5672`                             |
+| RabbitMQ Management UI | http://localhost:15672 (login `app`/`app`) |
 | Flower      | http://localhost:5555                            |
 | Emails enviados | https://ethereal.email/messages (login com `SMTP_USER`/`SMTP_PASSWORD` do [.env](.env)) |
 
@@ -62,13 +66,15 @@ Arquivo: [.env](.env)
 | `SQLALCHEMY_DATABASE_URL`     | sim         | URL do banco                               |
 | `REDIS_URL`                   | não         | URL do Redis (default `redis://redis:6379/0`) |
 | `CACHE_TTL_SECONDS`           | não         | TTL do cache de leitura em segundos (default 60) |
-| `CELERY_BROKER_URL`           | não         | URL do broker do Celery (default `redis://redis:6379/1`) |
+| `CELERY_BROKER_URL`           | não         | URL do broker do Celery, RabbitMQ (default `amqp://app:app@rabbitmq:5672//`) |
 | `CELERY_RESULT_BACKEND`       | não         | URL do result backend do Celery (default `redis://redis:6379/1`) |
 | `SMTP_HOST`                   | não         | Host SMTP (default `smtp.ethereal.email`)  |
 | `SMTP_PORT`                   | não         | Porta SMTP, STARTTLS (default 587)         |
 | `SMTP_USER`                   | sim         | Usuário SMTP (conta de teste do [Ethereal](https://ethereal.email/create)) |
 | `SMTP_PASSWORD`               | sim         | Senha SMTP correspondente                  |
 | `SMTP_FROM`                   | não         | Remetente exibido no email                 |
+| `ANTHROPIC_API_KEY`           | sim         | Chave da Claude API (gera bio em `POST /users/{id}/bio`) |
+| `ANTHROPIC_MODEL`             | não         | Modelo da Claude API (default `claude-opus-5`) |
 | `FIRST_SUPERUSER_EMAIL`       | não         | Email do seed inicial                      |
 | `FIRST_SUPERUSER_PASSWORD`    | não         | Senha do seed (apenas dev)                 |
 | `FIRST_SUPERUSER_NAME`        | não         | Nome do seed                               |
@@ -112,6 +118,7 @@ Todos sob o prefixo `/api/v1`. Swagger completo: http://localhost:8000/docs
 | POST   | `/users/`         | ✅   | Cria usuário                   |
 | PUT    | `/users/{id}`     | ✅   | Atualiza usuário (parcial)     |
 | DELETE | `/users/{id}`     | ✅   | Remove usuário                 |
+| POST   | `/users/{id}/bio` | ✅   | Gera bio via Claude API (não persiste) |
 
 ---
 
@@ -166,6 +173,7 @@ app/
 │   ├── cache.py             # client Redis
 │   ├── celery_app.py        # instância Celery (broker/backend)
 │   ├── config.py            # Settings (pydantic-settings)
+│   ├── llm.py                # cliente Claude API + generate_user_bio
 │   ├── logging.py           # Loguru
 │   └── security.py          # JWT + hashing
 ├── db/
@@ -177,7 +185,7 @@ app/
 │   └── user.py
 ├── schemas/
 │   ├── auth.py              # LoginInput, Token
-│   └── user.py              # UserCreate/Read/Update
+│   └── user.py              # UserCreate/Read/Update, UserBioGenerated/Read
 ├── tasks/
 │   └── user_tasks.py        # send_welcome_email (Celery task)
 └── main.py

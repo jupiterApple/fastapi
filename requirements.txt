@@ -12,6 +12,7 @@ loguru
 redis
 celery
 flower
+anthropic
 
 # dev/test
 pytest
